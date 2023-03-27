@@ -29,12 +29,16 @@ clean:
 .PHONY: test coverage coverage_html
 
 TEST_FLAGS = -v -race -failfast -covermode=atomic
+MINIMAL_COVERAGE = 50
 
 test:
-	@go test ${TEST_FLAGS} -coverprofile=${COVERAGE_FILE} -coverpkg=./... -timeout=10s ./...
+	@go test ${TEST_FLAGS} -coverprofile=${COVERAGE_FILE} -cover  -timeout=100s ./...
 
 coverage: test
 	@go tool cover -func ${COVERAGE_FILE}
+	@COVERAGE=$$(go tool cover -func=${COVERAGE_FILE} | grep total | grep statements |awk '{print $$3}' | sed 's/\%//g'); \
+	echo "Current coverage is $${COVERAGE}%, minimal is ${MINIMAL_COVERAGE}."; \
+	awk "BEGIN {exit ($${COVERAGE} < ${MINIMAL_COVERAGE})}"
 
 coverage_html: test
 	@go tool cover -html ${COVERAGE_FILE}
